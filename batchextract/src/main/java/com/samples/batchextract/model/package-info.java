@@ -1,0 +1,1 @@
+package com.samples.batchextract.model;
