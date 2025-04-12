@@ -1,0 +1,38 @@
+@Component
+public class AccessTokenFilter extends OncePerRequestFilter {
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        String accessToken = request.getHeader("access_token");
+
+        if (accessToken != null) {
+            // Set the Authorization header
+            request = new HttpServletRequestWrapper(request) {
+                @Override
+                public String getHeader(String name) {
+                    if ("Authorization".equalsIgnoreCase(name)) {
+                        return "Bearer " + accessToken;
+                    }
+                    return super.getHeader(name);
+                }
+            };
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
+
+
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable()
+            .authorizeRequests()
+            .anyRequest().authenticated()
+            .and()
+            .addFilterBefore(new AccessTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+    }
+}
